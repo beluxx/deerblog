@@ -1,0 +1,130 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-binaries:
+    name: Build (${{ matrix.os }}/${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+            artifact_name: deerblog-linux-amd64
+            archive_ext: tar.gz
+          - os: linux
+            arch: arm64
+            artifact_name: deerblog-linux-arm64
+            archive_ext: tar.gz
+          - os: darwin
+            arch: amd64
+            artifact_name: deerblog-darwin-amd64
+            archive_ext: tar.gz
+          - os: darwin
+            arch: arm64
+            artifact_name: deerblog-darwin-arm64
+            archive_ext: tar.gz
+          - os: windows
+            arch: amd64
+            artifact_name: deerblog-windows-amd64
+            bin_name: deerblog.exe
+            archive_ext: zip
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+          cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Compile Tailwind CSS
+        run: npx tailwindcss -i ./web/css/input.css -o ./static/css/tailwind.min.css --minify
+
+      - name: Build Pure Go Binary (Zero CGO)
+        env:
+          CGO_ENABLED: 0
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          VERSION="${{ github.ref_name }}"
+          if [ -z "$VERSION" ] || [ "$VERSION" = "main" ]; then
+            VERSION="v0.1.0-snapshot"
+          fi
+          
+          BIN_NAME="${{ matrix.bin_name || 'deerblog' }}"
+          mkdir -p build-out
+          go build -trimpath -ldflags="-s -w -X 'main.Version=${VERSION}'" -o "build-out/${BIN_NAME}" ./cmd/server
+
+      - name: Package Archive
+        run: |
+          mkdir -p release-pkg
+          cp README.md AGENTS.md release-pkg/ 2>/dev/null || true
+          BIN_NAME="${{ matrix.bin_name || 'deerblog' }}"
+          cp "build-out/${BIN_NAME}" release-pkg/
+          
+          ARCHIVE_NAME="${{ matrix.artifact_name }}.${{ matrix.archive_ext }}"
+          if [ "${{ matrix.archive_ext }}" = "tar.gz" ]; then
+            tar -czvf "${ARCHIVE_NAME}" -C release-pkg .
+          else
+            cd release-pkg && zip -r "../${ARCHIVE_NAME}" . && cd ..
+          fi
+          
+          mkdir -p dist
+          mv "${ARCHIVE_NAME}" dist/
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/*
+          retention-days: 1
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all built artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Generate Checksums
+        run: |
+          cd release-assets
+          sha256sum * > checksums.txt
+          cat checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

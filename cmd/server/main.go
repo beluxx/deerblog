@@ -21,9 +21,11 @@ import (
 	chimw "github.com/go-chi/chi/v5/middleware"
 )
 
+var Version = "dev"
+
 func main() {
 	cfg := config.Load()
-	log.Printf("[Init] 加载系统配置完成，监听端口 :%s", cfg.Port)
+	log.Printf("[Init] DeerBlog 版本: %s, 监听端口 :%s", Version, cfg.Port)
 
 	// 1. 初始化纯 Go SQLite 数据库
 	sqliteDB, err := database.InitSQLite(cfg.SqlitePath, cfg.AdminUser, cfg.AdminPass)

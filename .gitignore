@@ -29,3 +29,8 @@ static/uploads/
 Thumbs.db
 .gitconfig
 .local/
+.bash*
+.profile
+.gemini
+*.zip
+*.bundle
