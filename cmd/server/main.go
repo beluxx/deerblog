@@ -17,6 +17,7 @@ import (
 	"blog/internal/repository"
 	"blog/internal/service"
 	"blog/internal/views"
+	"blog/static"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 )
@@ -84,10 +85,9 @@ func main() {
 	r.Use(chimw.Recoverer)
 	r.Use(handler.SecurityHeaders)
 
-	// 静态文件服务
+	// 静态文件服务 (优先磁盘，回退至内嵌二进制 embed.FS)
 	workDir, _ := os.Getwd()
-	filesDir := http.Dir(workDir + "/static")
-	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(filesDir)))
+	r.Handle("/static/*", http.StripPrefix("/static/", static.FileServer(workDir+"/static")))
 
 	// 博客前台路由
 	r.Get("/", blogH.Home)

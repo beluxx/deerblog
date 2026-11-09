@@ -18,23 +18,23 @@ jobs:
         include:
           - os: linux
             arch: amd64
-            artifact_name: deerblog-linux-amd64
+            target: linux-amd64
             archive_ext: tar.gz
           - os: linux
             arch: arm64
-            artifact_name: deerblog-linux-arm64
+            target: linux-arm64
             archive_ext: tar.gz
           - os: darwin
             arch: amd64
-            artifact_name: deerblog-darwin-amd64
+            target: darwin-amd64
             archive_ext: tar.gz
           - os: darwin
             arch: arm64
-            artifact_name: deerblog-darwin-arm64
+            target: darwin-arm64
             archive_ext: tar.gz
           - os: windows
             arch: amd64
-            artifact_name: deerblog-windows-amd64
+            target: windows-amd64
             bin_name: deerblog.exe
             archive_ext: zip
 
@@ -75,14 +75,20 @@ jobs:
           mkdir -p build-out
           go build -trimpath -ldflags="-s -w -X 'main.Version=${VERSION}'" -o "build-out/${BIN_NAME}" ./cmd/server
 
-      - name: Package Archive
+      - name: Package Archive (<packagename>-<version>-<target>.<ext>)
         run: |
+          VERSION="${{ github.ref_name }}"
+          if [ -z "$VERSION" ] || [ "$VERSION" = "main" ]; then
+            VERSION="v0.1.0-snapshot"
+          fi
+
           mkdir -p release-pkg
-          cp README.md AGENTS.md release-pkg/ 2>/dev/null || true
+          # 仅保留 README.md，不包含开发规范 AGENTS.md
+          cp README.md release-pkg/
           BIN_NAME="${{ matrix.bin_name || 'deerblog' }}"
           cp "build-out/${BIN_NAME}" release-pkg/
           
-          ARCHIVE_NAME="${{ matrix.artifact_name }}.${{ matrix.archive_ext }}"
+          ARCHIVE_NAME="deerblog-${VERSION}-${{ matrix.target }}.${{ matrix.archive_ext }}"
           if [ "${{ matrix.archive_ext }}" = "tar.gz" ]; then
             tar -czvf "${ARCHIVE_NAME}" -C release-pkg .
           else
@@ -95,7 +101,7 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
+          name: deerblog-${{ matrix.target }}
           path: dist/*
           retention-days: 1
 
