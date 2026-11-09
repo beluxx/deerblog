@@ -1,0 +1,18 @@
+{{ if .Posts }}
+  <div class="space-y-1">
+    {{ range .Posts }}
+    <a href="/posts/{{ .Slug }}" class="block p-3 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+      <div class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+        {{ .Title }}
+      </div>
+      <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-1">
+        {{ .Summary }}
+      </div>
+    </a>
+    {{ end }}
+  </div>
+{{ else }}
+  <div class="text-center py-8 text-xs text-zinc-400">
+    未找到与关键词相关的文章
+  </div>
+{{ end }}

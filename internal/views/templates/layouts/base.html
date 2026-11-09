@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ if .Title }}{{ .Title }} - {{ .Site.SiteTitle }}{{ else }}{{ .Site.SiteTitle }} · {{ .Site.SiteSubtitle }}{{ end }}</title>
+  <meta name="description" content="{{ if .MetaDescription }}{{ .MetaDescription }}{{ else }}{{ .Site.SiteSubtitle }}{{ end }}">
+  
+  <!-- RSS & Sitemap 声明 -->
+  <link rel="alternate" type="application/rss+xml" title="{{ .Site.SiteTitle }} RSS Feed" href="/feed.xml">
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+
+  <!-- OpenGraph / Twitter Card 社交标签 -->
+  <meta property="og:site_name" content="{{ .Site.SiteTitle }}">
+  <meta property="og:title" content="{{ if .Title }}{{ .Title }} - {{ .Site.SiteTitle }}{{ else }}{{ .Site.SiteTitle }}{{ end }}">
+  <meta property="og:description" content="{{ if .MetaDescription }}{{ .MetaDescription }}{{ else }}{{ .Site.SiteSubtitle }}{{ end }}">
+  <meta property="og:type" content="{{ if .IsArticle }}article{{ else }}website{{ end }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ if .Title }}{{ .Title }} - {{ .Site.SiteTitle }}{{ else }}{{ .Site.SiteTitle }}{{ end }}">
+  <meta name="twitter:description" content="{{ if .MetaDescription }}{{ .MetaDescription }}{{ else }}{{ .Site.SiteSubtitle }}{{ end }}">
+
+  <link rel="stylesheet" href="/static/css/tailwind.min.css">
+  
+  <!-- KaTeX 数学公式支持 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Mermaid 图表支持 -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+
+  <script src="/static/js/htmx.min.js"></script>
+  <script>
+    // 初始化 Mermaid 主题
+    if (window.mermaid) {
+      const isDark = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      mermaid.initialize({ startOnLoad: false, theme: isDark ? 'dark' : 'default' });
+    }
+
+    // 页面加载完毕后自动渲染数学公式与图表
+    window.addEventListener('DOMContentLoaded', () => {
+      renderPageMathAndCharts();
+    });
+
+    function renderPageMathAndCharts(root = document.body) {
+      if (window.renderMathInElement) {
+        renderMathInElement(root, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+      if (window.mermaid) {
+        const nodes = root.querySelectorAll('.mermaid:not([data-processed])');
+        if (nodes.length > 0) {
+          mermaid.run({ nodes: nodes });
+        }
+      }
+    }
+    // 立即执行深色模式初始化，避免白屏闪烁
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    function toggleTheme() {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.theme = 'light';
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.theme = 'dark';
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- 浮动毛玻璃顶部导航栏 -->
+  <header class="sticky top-0 z-40 w-full backdrop-blur-md bg-white/80 dark:bg-zinc-950/80 border-b border-zinc-200/80 dark:border-zinc-800/80 transition-colors">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <a href="/" class="flex items-center space-x-2.5 group">
+        <span class="w-8 h-8 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 flex items-center justify-center font-bold text-base shadow-sm group-hover:scale-105 transition-transform">
+          ✦
+        </span>
+        <span class="font-bold text-lg tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+          {{ .Site.SiteTitle }}
+        </span>
+      </a>
+
+      <nav class="flex items-center space-x-1 sm:space-x-4">
+        <a href="/" class="px-3 py-1.5 text-sm font-medium rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">首页</a>
+        <a href="/archive" class="px-3 py-1.5 text-sm font-medium rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">归档</a>
+        
+        <!-- 搜索触发按钮 -->
+        <button onclick="document.getElementById('search-modal').classList.remove('hidden')" class="flex items-center space-x-2 px-3 py-1.5 text-xs text-zinc-500 bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <span class="hidden sm:inline">搜索文章...</span>
+          <kbd class="hidden sm:inline font-mono text-[10px] bg-zinc-200 dark:bg-zinc-800 px-1 rounded">⌘K</kbd>
+        </button>
+
+        <!-- 暗黑模式切换 -->
+        <button onclick="toggleTheme()" aria-label="Toggle theme" class="p-2 rounded-lg text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+          <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9h-1m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+          <svg class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+        </button>
+
+        <!-- 管理后台入口链接 -->
+        <a href="/admin/dashboard" title="管理后台" class="p-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 全局即时搜索弹窗 Modal (htmx 局部刷新) -->
+  <div id="search-modal" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden flex items-start justify-center pt-20 px-4">
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div class="p-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center space-x-3">
+        <svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <input 
+          type="text" 
+          name="q" 
+          placeholder="搜索文章标题、内容、标签..." 
+          class="w-full bg-transparent focus:outline-none text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400"
+          hx-get="/api/search" 
+          hx-trigger="keyup changed delay:300ms, search" 
+          hx-target="#search-results"
+          hx-indicator="#search-spinner"
+          autofocus
+        >
+        <span id="search-spinner" class="htmx-indicator text-xs text-indigo-500 animate-spin">⏳</span>
+        <button onclick="document.getElementById('search-modal').classList.add('hidden')" class="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 px-2 py-1 rounded border border-zinc-200 dark:border-zinc-800">ESC</button>
+      </div>
+      <div id="search-results" class="max-h-96 overflow-y-auto p-2">
+        <div class="text-center py-8 text-xs text-zinc-400">键入关键词以开始极速搜索</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主体内容 -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    {{ template "content" . }}
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="border-t border-zinc-200/80 dark:border-zinc-800/80 mt-auto py-8 text-center text-xs text-zinc-500 dark:text-zinc-400">
+    <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p>© {{ .CurrentYear }} {{ .Site.SiteTitle }}. Powered by Go + Chi + htmx & Tailwind CSS.</p>
+      <div class="flex items-center space-x-4">
+        <span class="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 纯 Go 零 CGO 极速运行
+        </span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 快捷键 ⌘K 呼出搜索
+    window.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        const modal = document.getElementById('search-modal');
+        modal.classList.toggle('hidden');
+        if (!modal.classList.contains('hidden')) {
+          modal.querySelector('input').focus();
+        }
+      }
+      if (e.key === 'Escape') {
+        document.getElementById('search-modal').classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

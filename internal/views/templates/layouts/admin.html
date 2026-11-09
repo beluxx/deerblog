@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ .Title }} - 管理控制台</title>
+  <link rel="stylesheet" href="/static/css/tailwind.min.css">
+  
+  <!-- KaTeX 数学公式支持 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Mermaid 图表支持 -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+
+  <script src="/static/js/htmx.min.js"></script>
+  <script>
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+    if (window.mermaid) {
+      mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+    }
+    function renderPageMathAndCharts(root = document.body) {
+      if (window.renderMathInElement) {
+        renderMathInElement(root, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+      if (window.mermaid) {
+        const nodes = root.querySelectorAll('.mermaid:not([data-processed])');
+        if (nodes.length > 0) {
+          mermaid.run({ nodes: nodes });
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col font-sans antialiased">
+
+  <!-- 后台顶栏 -->
+  <header class="h-14 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-6 sticky top-0 z-30">
+    <div class="flex items-center space-x-6">
+      <a href="/admin/dashboard" class="flex items-center space-x-2 font-bold text-sm tracking-tight">
+        <span class="w-6 h-6 rounded bg-indigo-600 text-white flex items-center justify-center text-xs">CMS</span>
+        <span>博客管理后台</span>
+      </a>
+      <nav class="hidden md:flex items-center space-x-1 text-sm">
+        <a href="/admin/dashboard" class="px-3 py-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">仪表盘</a>
+        <a href="/admin/posts" class="px-3 py-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">文章管理</a>
+        <a href="/admin/posts/new" class="px-3 py-1.5 rounded-md text-indigo-600 dark:text-indigo-400 font-medium hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition">✍️ 写文章</a>
+        <a href="/admin/categories" class="px-3 py-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">分类管理</a>
+        <a href="/admin/comments" class="px-3 py-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">评论管理</a>
+        <a href="/admin/settings" class="px-3 py-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">⚙️ 站点设置</a>
+      </nav>
+    </div>
+
+    <div class="flex items-center space-x-4 text-xs">
+      <a href="/" target="_blank" class="text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 flex items-center gap-1">
+        <span>访问博客前台</span>
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+      </a>
+      <form action="/admin/logout" method="POST" class="inline">
+        <button type="submit" class="text-red-500 hover:text-red-700 dark:hover:text-red-400">退出登录</button>
+      </form>
+    </div>
+  </header>
+
+  <!-- 主工作区 -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+    {{ template "content" . }}
+  </main>
+
+</body>
+</html>

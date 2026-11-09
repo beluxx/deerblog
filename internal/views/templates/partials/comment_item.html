@@ -1,0 +1,24 @@
+<div class="p-4 rounded-xl bg-white dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800/80 space-y-2 animate-in fade-in duration-200">
+  <div class="flex items-center justify-between text-xs">
+    <div class="flex items-center gap-2">
+      <span class="font-bold text-zinc-900 dark:text-zinc-100">
+        {{ if .AuthorSite }}
+          <a href="{{ .AuthorSite }}" target="_blank" rel="nofollow noopener" class="text-indigo-600 dark:text-indigo-400 hover:underline">
+            {{ .AuthorName }}
+          </a>
+        {{ else }}
+          {{ .AuthorName }}
+        {{ end }}
+      </span>
+      {{ if not .IsApproved }}
+        <span class="px-1.5 py-0.5 rounded text-[10px] bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">待审核</span>
+      {{ end }}
+    </div>
+    <time class="text-zinc-400 text-[11px]" datetime="{{ .CreatedAt.Format "2006-01-02 15:04" }}">
+      {{ .CreatedAt.Format "2006-01-02 15:04" }}
+    </time>
+  </div>
+  <p class="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line">
+    {{ .Content }}
+  </p>
+</div>

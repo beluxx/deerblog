@@ -1,0 +1,200 @@
+{{ define "content" }}
+<form method="POST" action="{{ if .Post.ID }}/admin/posts/{{ .Post.ID }}/edit{{ else }}/admin/posts/new{{ end }}" class="space-y-6">
+
+  <div class="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
+    <div>
+      <h1 class="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+        {{ if .Post.ID }}编辑文章: {{ .Post.Title }}{{ else }}撰写新文章{{ end }}
+      </h1>
+      <p class="text-xs text-zinc-500 mt-0.5">左侧编写 Markdown，右侧由 Go 后端 Goldmark + Chroma 实时生成高亮预览。</p>
+    </div>
+    <div class="flex items-center space-x-3">
+      <a href="/admin/posts" class="px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-850 transition">
+        取消
+      </a>
+      <button type="submit" class="px-5 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition">
+        保存并发布
+      </button>
+    </div>
+  </div>
+
+  <!-- 基础元数据网格 -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs">
+    <div class="md:col-span-2">
+      <label class="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">文章标题 *</label>
+      <input type="text" id="post-title" name="title" required value="{{ .Post.Title }}" placeholder="如：探索现代纯 Go 架构的无限可能" class="w-full px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-indigo-500">
+    </div>
+    <div>
+      <div class="flex items-center justify-between mb-1">
+        <label class="block font-medium text-zinc-700 dark:text-zinc-300">URL Slug (路径名) *</label>
+        <button type="button" onclick="autoGenerateSlug()" class="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">⚡ 依标题生成</button>
+      </div>
+      <input type="text" id="post-slug" name="slug" required value="{{ .Post.Slug }}" placeholder="pure-go-architecture" class="w-full px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-indigo-500 font-mono">
+    </div>
+    <div>
+      <label class="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">所属分类</label>
+      <select name="category_id" class="w-full px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-indigo-500">
+        <option value="">未分类</option>
+        {{ range .Categories }}
+        <option value="{{ .ID }}" {{ if isSameCategory $.Post.CategoryID .ID }}selected{{ end }}>{{ .Name }}</option>
+        {{ end }}
+      </select>
+    </div>
+    <div class="md:col-span-3">
+      <label class="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">标签 (逗号分隔)</label>
+      <input type="text" name="tags" value="{{ .TagNames }}" placeholder="Golang, 架构, Web开发" class="w-full px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-indigo-500">
+    </div>
+    <div class="flex items-center pt-5">
+      <label class="inline-flex items-center cursor-pointer">
+        <input type="checkbox" name="is_published" value="true" {{ if .Post.IsPublished }}checked{{ end }} class="rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500">
+        <span class="ml-2 font-medium text-zinc-800 dark:text-zinc-200">公开并发布</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- 双栏编辑与实时预览 -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[650px]">
+    
+    <!-- 左栏：Markdown 编写区 -->
+    <div class="flex flex-col rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm">
+      <div class="px-4 py-2 bg-zinc-50 dark:bg-zinc-850 border-b border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <span>MARKDOWN 源代码</span>
+          <button type="button" onclick="document.getElementById('img-file-input').click()" class="px-2 py-1 rounded bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:text-indigo-600 dark:hover:text-indigo-400 text-[11px] font-normal transition flex items-center gap-1">
+            <span>🖼️ 插入图片</span>
+          </button>
+          <input type="file" id="img-file-input" accept="image/*" class="hidden" onchange="uploadImageFile(this.files[0])">
+          <span id="upload-status" class="text-[11px] text-indigo-500 font-normal hidden">正在上传...</span>
+        </div>
+        <span class="text-[11px] font-normal text-zinc-400">支持拖拽与粘贴图片</span>
+      </div>
+      <textarea 
+        id="markdown-editor"
+        name="content_raw" 
+        rows="25" 
+        placeholder="# 在这里书写你的深度思考...&#10;&#10;```go&#10;package main&#10;func main() { ... }&#10;```&#10;&#10;```mermaid&#10;graph TD&#10;  A[开始] --> B[完成]&#10;```&#10;&#10;公式：$E = mc^2$" 
+        class="w-full flex-1 p-4 bg-transparent font-mono text-xs leading-relaxed focus:outline-none resize-none text-zinc-900 dark:text-zinc-100"
+        hx-post="/admin/posts/preview" 
+        hx-trigger="input delay:150ms, keyup delay:150ms, load" 
+        hx-include="this"
+        hx-target="#preview-container"
+        hx-swap="innerHTML"
+      >{{ .Post.ContentRaw }}</textarea>
+    </div>
+
+    <!-- 右栏：Chroma 实时高亮预览区 -->
+    <div class="flex flex-col rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm">
+      <div class="px-4 py-2 bg-zinc-50 dark:bg-zinc-850 border-b border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 flex items-center justify-between">
+        <span>实时渲染预览 (100% 贴近前台)</span>
+        <span class="text-indigo-600 dark:text-indigo-400 font-medium">⚡ 服务端 Chroma + KaTeX + Mermaid</span>
+      </div>
+      <div id="preview-container" class="flex-1 p-6 overflow-y-auto">
+        <p class="text-xs text-zinc-400">正在生成预览...</p>
+      </div>
+    </div>
+
+  </div>
+
+</form>
+
+<script>
+  // 1. 监听 htmx 渲染完毕，自动重新渲染 LaTeX 公式与 Mermaid 图表
+  document.body.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target && evt.detail.target.id === 'preview-container') {
+      if (window.renderPageMathAndCharts) {
+        renderPageMathAndCharts(evt.detail.target);
+      }
+    }
+  });
+
+  // 2. 异步上传图片并插入 Markdown 文本
+  function uploadImageFile(file) {
+    if (!file) return;
+    const status = document.getElementById('upload-status');
+    status.classList.remove('hidden');
+    status.innerText = '正在上传...';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    fetch('/admin/api/upload', {
+      method: 'POST',
+      body: formData
+    })
+    .then(r => r.json())
+    .then(res => {
+      status.classList.add('hidden');
+      if (res.url) {
+        insertMarkdownAtCursor(`\n![${file.name || '图片'}](${res.url})\n`);
+      } else {
+        alert(res.error || '上传图片失败');
+      }
+    })
+    .catch(err => {
+      status.classList.add('hidden');
+      alert('上传发生错误: ' + err.message);
+    });
+  }
+
+  function insertMarkdownAtCursor(text) {
+    const textarea = document.getElementById('markdown-editor');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const val = textarea.value;
+    textarea.value = val.substring(0, start) + text + val.substring(end);
+    textarea.selectionStart = textarea.selectionEnd = start + text.length;
+    textarea.focus();
+    // 触发 input 事件以激发 htmx 实时预览
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  // 3. 监听粘贴与拖拽图片
+  const editor = document.getElementById('markdown-editor');
+  editor.addEventListener('paste', (e) => {
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    for (let item of items) {
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        e.preventDefault();
+        uploadImageFile(item.getAsFile());
+        break;
+      }
+    }
+  });
+
+  editor.addEventListener('dragover', (e) => e.preventDefault());
+  editor.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        uploadImageFile(file);
+      }
+    }
+  });
+
+  // 4. 自动生成或同步 URL Slug
+  function autoGenerateSlug() {
+    const titleInput = document.getElementById('post-title');
+    const slugInput = document.getElementById('post-slug');
+    if (!titleInput || !slugInput) return;
+    const title = titleInput.value.trim();
+    if (!title) return;
+
+    let slug = title.toLowerCase()
+      .replace(/[^\w\u4e00-\u9fa5\-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    if (!slug) slug = 'post-' + Date.now();
+    slugInput.value = slug;
+  }
+
+  const titleEl = document.getElementById('post-title');
+  const slugEl = document.getElementById('post-slug');
+  if (titleEl && slugEl) {
+    titleEl.addEventListener('blur', () => {
+      if (!slugEl.value.trim()) {
+        autoGenerateSlug();
+      }
+    });
+  }
+</script>
+{{ end }}

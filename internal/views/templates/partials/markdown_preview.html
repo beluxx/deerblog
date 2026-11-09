@@ -1,0 +1,11 @@
+<div class="prose-content text-zinc-800 dark:text-zinc-200">
+  {{ if .Post.ContentHTML }}
+    {{ .Post.ContentHTML }}
+  {{ else }}
+    <div class="py-24 text-center text-xs text-zinc-400 select-none">
+      <div class="text-3xl mb-3">✍️</div>
+      <p class="font-medium text-zinc-600 dark:text-zinc-300">在左侧书写 Markdown，右侧将实时渲染预览</p>
+      <p class="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1.5">支持 GFM 表格、Mermaid 图表、LaTeX 公式、Chroma 代码高亮</p>
+    </div>
+  {{ end }}
+</div>

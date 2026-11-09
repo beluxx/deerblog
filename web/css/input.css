@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #fafafa;
+    --foreground: #18181b;
+  }
+
+  .dark {
+    --background: #09090b;
+    --foreground: #f4f4f5;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* 博客正文排版 (Prose 样式) */
+.prose-content {
+  line-height: 1.8;
+  font-size: 1.0625rem;
+}
+
+.prose-content p {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
+
+.prose-content h1,
+.prose-content h2,
+.prose-content h3 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  scroll-margin-top: 5rem;
+}
+
+.prose-content h2 {
+  font-size: 1.625rem;
+  margin-top: 2.2em;
+  margin-bottom: 0.8em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid rgba(161, 161, 170, 0.2);
+}
+
+.prose-content h3 {
+  font-size: 1.3rem;
+  margin-top: 1.8em;
+  margin-bottom: 0.6em;
+}
+
+.prose-content ul,
+.prose-content ol {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  padding-left: 1.6em;
+}
+
+.prose-content ul {
+  list-style-type: disc;
+}
+
+.prose-content ol {
+  list-style-type: decimal;
+}
+
+.prose-content li {
+  margin-top: 0.4em;
+  margin-bottom: 0.4em;
+}
+
+.prose-content blockquote {
+  border-left: 3px solid #6366f1;
+  padding-left: 1.2rem;
+  font-style: italic;
+  margin: 1.5em 0;
+  opacity: 0.9;
+}
+
+.prose-content code:not(pre code) {
+  padding: 0.2em 0.4em;
+  border-radius: 0.375rem;
+  background-color: rgba(161, 161, 170, 0.15);
+  font-size: 0.875em;
+  font-family: inherit;
+}
+
+.prose-content img {
+  border-radius: 0.75rem;
+  margin: 1.8em auto;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.1);
+}
+
+.prose-content a {
+  color: #6366f1;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.prose-content a:hover {
+  color: #4f46e5;
+}
+
+/* htmx loading 指示器 */
+.htmx-indicator {
+  display: none;
+}
+.htmx-request .htmx-indicator {
+  display: inline-block;
+}
+.htmx-request.htmx-indicator {
+  display: inline-block;
+}

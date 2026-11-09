@@ -1,0 +1,73 @@
+{{ define "content" }}
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">评论互动管理</h1>
+      <p class="text-xs text-zinc-500 mt-1">审核前台读者留言，保障健康理性的交流氛围。</p>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
+    <table class="w-full text-left text-xs">
+      <thead class="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 uppercase">
+        <tr>
+          <th class="p-4">作者信息</th>
+          <th class="p-4">评论内容</th>
+          <th class="p-4">关联文章</th>
+          <th class="p-4">状态</th>
+          <th class="p-4">时间</th>
+          <th class="p-4 text-right">操作</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+        {{ range .Comments }}
+        <tr class="hover:bg-zinc-50/50 dark:hover:bg-zinc-850/50 transition">
+          <td class="p-4 font-semibold text-zinc-900 dark:text-zinc-100">
+            <div>{{ .AuthorName }}</div>
+            <div class="text-[11px] text-zinc-400 font-normal font-mono">{{ .AuthorEmail }}</div>
+          </td>
+          <td class="p-4 text-zinc-700 dark:text-zinc-300 max-w-xs break-words">
+            {{ .Content }}
+          </td>
+          <td class="p-4 text-zinc-600 dark:text-zinc-400">
+            {{ .PostTitle }}
+          </td>
+          <td class="p-4">
+            {{ if .IsApproved }}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
+                已通过
+              </span>
+            {{ else }}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">
+                待审核
+              </span>
+            {{ end }}
+          </td>
+          <td class="p-4 text-zinc-400 font-mono">
+            {{ .CreatedAt.Format "01-02 15:04" }}
+          </td>
+          <td class="p-4 text-right space-x-2">
+            {{ if not .IsApproved }}
+            <form action="/admin/comments/{{ .ID }}/approve" method="POST" class="inline">
+              <button type="submit" class="text-emerald-600 hover:text-emerald-800 font-medium">批准</button>
+            </form>
+            {{ end }}
+            <form action="/admin/comments/{{ .ID }}/delete" method="POST" class="inline" onsubmit="return confirm('确定要删除这条评论吗？');">
+              <button type="submit" class="text-red-500 hover:text-red-700 font-medium">删除</button>
+            </form>
+          </td>
+        </tr>
+        {{ else }}
+        <tr>
+          <td colspan="6" class="p-8 text-center text-zinc-400">
+            目前没有任何评论记录。
+          </td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{{ end }}

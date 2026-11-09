@@ -1,0 +1,62 @@
+{{ define "content" }}
+<div class="space-y-8">
+
+  <div class="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">控制台仪表盘</h1>
+      <p class="text-xs text-zinc-500 mt-1">欢迎回来，掌控全站内容与互动数据。</p>
+    </div>
+    <a href="/admin/posts/new" class="px-4 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition">
+      + 撰写新文章
+    </a>
+  </div>
+
+  <!-- 统计指标网格 -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div class="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+      <div class="text-xs text-zinc-500 dark:text-zinc-400">文章总数 / 已发布</div>
+      <div class="mt-2 text-2xl font-extrabold text-zinc-900 dark:text-zinc-100">
+        {{ .Stats.TotalPosts }} <span class="text-sm font-normal text-emerald-600 dark:text-emerald-400">({{ .Stats.PublishedPosts }}篇公开)</span>
+      </div>
+    </div>
+    <div class="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+      <div class="text-xs text-zinc-500 dark:text-zinc-400">全站总阅读量</div>
+      <div class="mt-2 text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">
+        {{ .Stats.TotalViews }}
+      </div>
+    </div>
+    <div class="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+      <div class="text-xs text-zinc-500 dark:text-zinc-400">获赞总数</div>
+      <div class="mt-2 text-2xl font-extrabold text-red-500">
+        {{ .Stats.TotalLikes }}
+      </div>
+    </div>
+    <div class="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+      <div class="text-xs text-zinc-500 dark:text-zinc-400">评论总数 / 待审</div>
+      <div class="mt-2 text-2xl font-extrabold text-zinc-900 dark:text-zinc-100">
+        {{ .Stats.TotalComments }} <span class="text-sm font-normal text-amber-500">({{ .Stats.PendingComments }}待审)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 快捷通道 -->
+  <div class="p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-4">
+    <h2 class="text-sm font-bold text-zinc-900 dark:text-zinc-100">常用快捷操作</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+      <a href="/admin/posts/new" class="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500 transition group block">
+        <div class="font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600">✍️ 在线 Markdown 写作</div>
+        <p class="text-zinc-500 mt-1">支持双栏实时高亮预览，即写即存</p>
+      </a>
+      <a href="/admin/posts" class="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500 transition group block">
+        <div class="font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600">📑 文章列表与管理</div>
+        <p class="text-zinc-500 mt-1">编辑已有文章、发布与草稿状态切换</p>
+      </a>
+      <a href="/admin/comments" class="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500 transition group block">
+        <div class="font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600">🛡️ 评论互动审核</div>
+        <p class="text-zinc-500 mt-1">审核访客留言、拦截垃圾广告评论</p>
+      </a>
+    </div>
+  </div>
+
+</div>
+{{ end }}

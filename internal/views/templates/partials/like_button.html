@@ -1,0 +1,10 @@
+<button 
+  id="like-btn"
+  hx-post="/api/posts/{{ .Slug }}/like" 
+  hx-target="#like-container" 
+  hx-swap="innerHTML"
+  class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-red-500/50 hover:bg-red-50/50 dark:hover:bg-red-950/20 text-zinc-700 dark:text-zinc-300 hover:text-red-600 dark:hover:text-red-400 shadow-sm transition-all transform active:scale-95 group"
+>
+  <span class="group-hover:scale-125 transition-transform">❤️</span>
+  <span>点赞 (<span class="font-mono">{{ .LikesCount }}</span>)</span>
+</button>

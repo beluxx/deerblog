@@ -1,0 +1,31 @@
+# 编译与构建产物
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 数据库与运行时持久化文件
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.bolt
+
+# 依赖与缓存
+node_modules/
+go/
+.cache/
+.npm/
+.config/
+
+# 本地上传的媒体文件
+static/uploads/
+!static/uploads/.gitkeep
+
+# 操作系统临时文件
+.DS_Store
+Thumbs.db
+.gitconfig
+.local/

@@ -1,0 +1,192 @@
+{{ define "content" }}
+<div class="relative">
+
+  <!-- 面包屑与返回 -->
+  <nav class="mb-8">
+    <a href="/" class="inline-flex items-center text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition">
+      <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+      返回首页
+    </a>
+  </nav>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+
+    <!-- 主阅读区域 -->
+    <article class="lg:col-span-8 min-w-0">
+      
+      <!-- 头部 Meta -->
+      <header class="mb-8 pb-6 border-b border-zinc-200/80 dark:border-zinc-800/80">
+        {{ if .Post.Category }}
+        <a href="/category/{{ .Post.Category.Slug }}" class="inline-block text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-3">
+          {{ .Post.Category.Name }}
+        </a>
+        {{ end }}
+        
+        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 leading-tight">
+          {{ .Post.Title }}
+        </h1>
+
+        <div class="mt-4 flex flex-wrap items-center gap-4 text-xs text-zinc-500 dark:text-zinc-400">
+          <time datetime="{{ .Post.CreatedAt.Format "2006-01-02" }}">
+            发布于 {{ .Post.CreatedAt.Format "2006-01-02" }}
+          </time>
+          <span>·</span>
+          <span>预计阅读 {{ .Post.ReadingMinutes }} 分钟</span>
+          <span>·</span>
+          <span>👁️ {{ .Post.ViewsCount }} 次浏览</span>
+        </div>
+
+        {{ if .Post.Tags }}
+        <div class="mt-4 flex flex-wrap gap-2">
+          {{ range .Post.Tags }}
+          <span class="px-2 py-0.5 rounded text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">#{{ .Name }}</span>
+          {{ end }}
+        </div>
+        {{ end }}
+      </header>
+
+      <!-- 文章正文 (已由 Goldmark + Chroma 服务端直出) -->
+      <div class="prose-content text-zinc-800 dark:text-zinc-200">
+        {{ .Post.ContentHTML }}
+      </div>
+
+      <!-- 点赞交互区 (htmx 局部无刷新) -->
+      <div class="mt-12 py-8 border-y border-zinc-200/80 dark:border-zinc-800/80 flex flex-col items-center justify-center space-y-3">
+        <p class="text-xs text-zinc-500">如果这篇文章对你有启发，不妨点个赞支持一下：</p>
+        <div id="like-container">
+          {{ template "like_button.html" .Post }}
+        </div>
+      </div>
+
+      <!-- 评论互动区 -->
+      <section class="mt-12 space-y-6">
+        <div class="flex items-center justify-between pb-2 border-b border-zinc-200/80 dark:border-zinc-800/80">
+          <h2 class="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+            💬 讨论交流 (<span id="comment-count">{{ len .Comments }}</span>)
+          </h2>
+        </div>
+
+        <!-- 发表评论表单 (htmx 异步提交，插入底部) -->
+        <form 
+          hx-post="/api/posts/{{ .Post.Slug }}/comments" 
+          hx-target="#comment-list" 
+          hx-swap="beforeend" 
+          hx-on::after-request="if(event.detail.successful) { this.reset(); const c = document.getElementById('comment-count'); if(c) c.innerText = parseInt(c.innerText) + 1; const empty = document.getElementById('empty-comment'); if(empty) empty.remove(); }"
+          class="p-5 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800/80 space-y-4 shadow-sm"
+        >
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">昵称 *</label>
+              <input type="text" name="author_name" required placeholder="你的名字或昵称" class="w-full text-xs px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">邮箱 * (保密)</label>
+              <input type="email" name="author_email" required placeholder="用于接收回复通知" class="w-full text-xs px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-indigo-500">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">个人网址 (可选)</label>
+            <input type="url" name="author_site" placeholder="https://example.com" class="w-full text-xs px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">评论内容 *</label>
+            <textarea name="content" required rows="3" placeholder="支持纯文本交流，欢迎理性探讨..." class="w-full text-xs p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-indigo-500"></textarea>
+          </div>
+          <div class="flex justify-end">
+            <button type="submit" class="px-4 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition">
+              发表评论
+            </button>
+          </div>
+        </form>
+
+        <!-- 评论列表 -->
+        <div id="comment-list" class="space-y-4">
+          {{ range .Comments }}
+            {{ template "comment_item.html" . }}
+          {{ else }}
+            <p id="empty-comment" class="text-center py-6 text-xs text-zinc-400">暂无评论，快来抢占沙发吧~</p>
+          {{ end }}
+        </div>
+      </section>
+
+    </article>
+
+    <!-- 右侧吸顶目录 (TOC) -->
+    {{ if .TOC }}
+    <aside class="hidden lg:block lg:col-span-4 sticky top-24 space-y-4 pl-4 border-l border-zinc-200/80 dark:border-zinc-800/80">
+      <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+        目录大纲 (TOC)
+      </h3>
+      <nav id="toc-nav" class="space-y-1.5 text-xs max-h-[75vh] overflow-y-auto pr-2">
+        {{ range .TOC }}
+        <a href="#{{ .ID }}" data-target="{{ .ID }}" class="toc-link block text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors {{ if eq .Level 3 }}pl-3 text-[11px] text-zinc-500{{ end }}">
+          {{ .Title }}
+        </a>
+        {{ end }}
+      </nav>
+    </aside>
+    {{ end }}
+
+  </div>
+
+</div>
+
+<!-- 顶端平滑阅读进度指示条 -->
+<div id="reading-progress" class="fixed top-0 left-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-600 z-50 transition-all duration-75 pointer-events-none" style="width: 0%"></div>
+
+<script>
+  // 1. 阅读进度条
+  window.addEventListener('scroll', () => {
+    const docEl = document.documentElement;
+    const scrollTop = docEl.scrollTop || document.body.scrollTop;
+    const scrollHeight = docEl.scrollHeight - docEl.clientHeight;
+    const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+    const bar = document.getElementById('reading-progress');
+    if (bar) bar.style.width = progress + '%';
+  });
+
+  // 2. 一键复制代码
+  function copyCode(btn) {
+    const wrapper = btn.closest('.my-6');
+    if (!wrapper) return;
+    const codeEl = wrapper.querySelector('.code-content');
+    if (!codeEl) return;
+
+    const rawText = codeEl.innerText || codeEl.textContent;
+    navigator.clipboard.writeText(rawText).then(() => {
+      const orig = btn.innerText;
+      btn.innerText = '✓ 已复制';
+      btn.classList.add('text-emerald-400');
+      setTimeout(() => {
+        btn.innerText = orig;
+        btn.classList.remove('text-emerald-400');
+      }, 2000);
+    }).catch(err => {
+      console.error('Copy failed:', err);
+    });
+  }
+
+  // 3. TOC ScrollSpy (滚动自动高亮对应章节)
+  const tocLinks = document.querySelectorAll('.toc-link');
+  if (tocLinks.length > 0) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.getAttribute('id');
+          tocLinks.forEach(link => {
+            if (link.getAttribute('data-target') === id) {
+              link.classList.add('text-indigo-600', 'dark:text-indigo-400', 'font-bold');
+            } else {
+              link.classList.remove('text-indigo-600', 'dark:text-indigo-400', 'font-bold');
+            }
+          });
+        }
+      });
+    }, { rootMargin: '0px 0px -70% 0px' });
+
+    document.querySelectorAll('.prose-content h2, .prose-content h3').forEach(heading => {
+      observer.observe(heading);
+    });
+  }
+</script>
+{{ end }}
